@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "A student enrolled in the tuition center.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "class": { "type": "string" },
+        "monthlyFee": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "phone", "class", "monthlyFee"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "A fee payment record for a student.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "month": { "type": "string", "description": "Format: YYYY-MM" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "receiptNumber": { "type": "string" },
+        "status": { "type": "string", "enum": ["Paid"] }
+      },
+      "required": ["studentId", "month", "amount", "date", "receiptNumber", "status"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Institute settings for receipts.",
+      "type": "object",
+      "properties": {
+        "instituteName": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "logoBase64": { "type": "string" },
+        "signatureBase64": { "type": "string" }
+      },
+      "required": ["instituteName"]
+    }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Collection of students."
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Collection of payments."
+    },
+    "/settings/config": {
+      "schema": "Settings",
+      "description": "Global institute settings."
+    }
+  }
+}

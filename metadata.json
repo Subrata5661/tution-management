@@ -1,0 +1,5 @@
+{
+  "name": "Tuition Fee Manager",
+  "description": "A mobile-friendly tuition center fee management system with student tracking, payment status, and PDF receipt generation.",
+  "requestFramePermissions": []
+}

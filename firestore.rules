@@ -1,0 +1,130 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: students
+// Document ID: auto-generated
+// Fields:
+//   - id: string (required)
+//   - name: string (required, minLen 1, maxLen 100)
+//   - phone: string (required, format: phone)
+//   - class: string (required)
+//   - monthlyFee: number (required, positive)
+//   - createdAt: timestamp (required)
+//
+// Collection: payments
+// Document ID: auto-generated
+// Fields:
+//   - id: string (required)
+//   - studentId: string (required)
+//   - month: string (required, format: YYYY-MM)
+//   - amount: number (required, positive)
+//   - date: timestamp (required)
+//   - receiptNumber: string (required)
+//   - status: string (required, enum: ['Paid'])
+//
+// Collection: settings
+// Document ID: config
+// Fields:
+//   - instituteName: string (required)
+//   - logoUrl: string (optional)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "adron8204@gmail.com" ||
+         request.auth.token.email == "subrata5661@gmail.com" ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidStudent(data) {
+      return hasRequiredFields(['name', 'phone', 'class', 'monthlyFee', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.phone is string && data.phone.size() >= 10 &&
+             data.class is string &&
+             data.monthlyFee is number && data.monthlyFee > 0 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidPayment(data) {
+      return hasRequiredFields(['studentId', 'month', 'amount', 'date', 'receiptNumber', 'status']) &&
+             data.studentId is string &&
+             data.month is string && data.month.matches("^\\d{4}-\\d{2}$") &&
+             data.amount is number && data.amount > 0 &&
+             data.date is timestamp &&
+             data.receiptNumber is string &&
+             data.status == 'Paid';
+    }
+
+    function isValidSettings(data) {
+      return hasRequiredFields(['instituteName']) &&
+             data.instituteName is string && data.instituteName.size() > 0 && data.instituteName.size() < 200 &&
+             (!('logoUrl' in data) || (data.logoUrl is string)) &&
+             (!('logoBase64' in data) || (data.logoBase64 is string && data.logoBase64.size() < 1000000)) &&
+             (!('signatureBase64' in data) || (data.signatureBase64 is string && data.signatureBase64.size() < 1000000));
+    }
+
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'email', 'role']) &&
+             data.uid is string && data.email is string &&
+             data.role in ['admin', 'user'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /students/{studentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidStudent(request.resource.data);
+      allow update: if isAuthenticated() && isValidStudent(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidPayment(request.resource.data);
+      allow update: if isAuthenticated() && isValidPayment(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /settings/config {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isValidSettings(request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && 
+                      request.auth.uid == userId && 
+                      isValidUser(request.resource.data) &&
+                      (request.resource.data.role == 'user' || 
+                       request.auth.token.email == "adron8204@gmail.com" || 
+                       request.auth.token.email == "subrata5661@gmail.com");
+      allow update: if (request.auth.uid == userId || isAdmin()) && isValidUser(request.resource.data) &&
+                      (request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}
