@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const path = `users/${user.uid}`;
         try {
           const userDoc = await getDoc(userDocRef);
-          const isAdminEmail = user.email === 'adron8204@gmail.com' || user.email === 'subrata5661@gmail.com';
+          const isAdminEmail = user.email === 'adron8204@gmail.com' || user.email === 'subrata5661@gmail.com' || user.email === 'subrata21217@gmail.com';
           const expectedRole = isAdminEmail ? 'admin' : 'user';
 
           if (userDoc.exists()) {
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const isAdmin = userData?.role === 'admin' || user?.email === 'adron8204@gmail.com';
+  const isAdmin = userData?.role === 'admin' || user?.email === 'adron8204@gmail.com' || user?.email === 'subrata5661@gmail.com' || user?.email === 'subrata21217@gmail.com' || user?.uid === 'gGlccPx3GdQGzMxjpp5GYA6NZFD2' || user?.uid === 'dGtT5HDcW1gF3ihOiXfxRuo24Zv1';
 
   return (
     <AuthContext.Provider value={{ user, userData, loading, isAdmin }}>

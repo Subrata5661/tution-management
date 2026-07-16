@@ -44,8 +44,11 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() &&
-        (request.auth.token.email == "adron8204@gmail.com" ||
+        (request.auth.uid == "gGlccPx3GdQGzMxjpp5GYA6NZFD2" ||
+         request.auth.uid == "dGtT5HDcW1gF3ihOiXfxRuo24Zv1" ||
+         request.auth.token.email == "adron8204@gmail.com" ||
          request.auth.token.email == "subrata5661@gmail.com" ||
+         request.auth.token.email == "subrata21217@gmail.com" ||
          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
     }
@@ -121,7 +124,8 @@ service cloud.firestore {
                       isValidUser(request.resource.data) &&
                       (request.resource.data.role == 'user' || 
                        request.auth.token.email == "adron8204@gmail.com" || 
-                       request.auth.token.email == "subrata5661@gmail.com");
+                       request.auth.token.email == "subrata5661@gmail.com" ||
+                       request.auth.token.email == "subrata21217@gmail.com");
       allow update: if (request.auth.uid == userId || isAdmin()) && isValidUser(request.resource.data) &&
                       (request.resource.data.role == resource.data.role || isAdmin());
       allow delete: if isAdmin();

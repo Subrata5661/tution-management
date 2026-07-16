@@ -256,6 +256,31 @@ export default function PaymentList() {
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleSharePDF = async (student: Student, payment: Payment) => {
+    const pdfDoc = await generatePDF(student, payment);
+    const pdfBlob = pdfDoc.output('blob');
+    const fileName = `Receipt_${student.name}_${payment.month}.pdf`;
+    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `Receipt for ${student.name}`,
+          text: `Fee receipt for ${format(new Date(payment.month + '-01'), 'MMMM yyyy')}`,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error("Error sharing PDF:", err);
+          handleShareWhatsApp(student, payment);
+        }
+      }
+    } else {
+      // Fallback: Just open WhatsApp with message if file sharing not supported
+      handleShareWhatsApp(student, payment);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -378,9 +403,9 @@ export default function PaymentList() {
                               <Receipt size={18} />
                             </button>
                             <button
-                              onClick={() => handleShareWhatsApp(student, payment)}
+                              onClick={() => handleSharePDF(student, payment)}
                               className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                              title="Share on WhatsApp"
+                              title="Share PDF on WhatsApp"
                             >
                               <Share2 size={18} />
                             </button>
@@ -541,11 +566,11 @@ export default function PaymentList() {
                 Download PDF
               </button>
               <button
-                onClick={() => handleShareWhatsApp(currentReceipt.student, currentReceipt.payment)}
+                onClick={() => handleSharePDF(currentReceipt.student, currentReceipt.payment)}
                 className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
               >
                 <Share2 size={18} />
-                WhatsApp
+                Share PDF
               </button>
             </div>
           </div>
